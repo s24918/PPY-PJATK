@@ -1,104 +1,207 @@
 import tkinter as tk
-from screeninfo import get_monitors
 from tkinter import ttk
+import mysql
+from mysql import connector
 
 root = tk.Tk()
+treeview = ttk.Treeview(root)
+treeview["columns"] = ("id", "title", "author", "price", "category")
+treeview.column("#0", width=0)
+treeview.heading("id", text="ID")
+treeview.heading("title", text="Tytuł")
+treeview.heading("author", text="Autor")
+treeview.heading("price", text="Cena")
+treeview.heading("category", text="Kategoria")
 
-def change_text():
-    name = entry.get() # Pobranie tekstu z pola tekstowego
-    label.config(text = "Witaj " + name) # Zmiana tekstu etykiety na nowy tekst
 
-    new_text = "witaj " + entry.get()
-    who = "\nJestes: " + radio_var.get()
-    label.config(text = new_text + who)
+def open_details_window(event):  # Pobranie zaznaczonego elementu
+    selected_item = treeview.focus()
+    if selected_item:
+        item_data = treeview.item(selected_item)
+        values = item_data['values']
+        print(values)
 
-    languages = "\nZnasz nastepujace jezyki programowania:\n"
-    for i in range(len(checkbox_vars)):
-        if checkbox_vars[i].get() == 1:
-            languages = languages + " " + checkboxes[i].cget("text")
 
-    experience = "\nmasz " + str(slider.get()) + " lat doswiadczenia."
+def connect():
+    return mysql.connector.connect(
+        host="db4free.net",
+        user="",
+        password="",
+        database="")
 
-    home = "\nMieszkasz w wojewodztwie:\n" + combobox.get()
-    label.config(text = new_text + who + languages + experience + home)
+
+def fetch_data() -> list[tuple]:
+    conn = connect()
+    cursor = conn.cursor()
+    cursor.execute("select * from books;")
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result
+
+
+def load_data():
+    data = fetch_data()
+
+    treeview.delete(*treeview.get_children())
+    for row in data:
+        treeview.insert("", "end", values=(row[0], row[1], row[2], row[3], row[4]))
+
+
+def open_add_new_book_window():
     pass
 
-# root.geometry("800x600")
 
-root.title("Book Store")
-root.iconbitmap("./bookshelf.ico")
-screen_width = get_monitors()[0].width
-screen_height = get_monitors()[0].height
+def open_new_book_window():
+    new_window = tk.Toplevel(root)
+    new_window.title("Dodaj nową książkę")
 
-# root.geometry(f"{int(screen_width/2)}x{int(screen_height/2)}")
+    title_label = ttk.Label(new_window, text="Tytuł:")
+    title_label.pack()
+    title_entry = ttk.Entry(new_window)
+    title_entry.pack()
 
-left_frame = tk.Frame(root, borderwidth = 4, relief = "ridge", width = int(screen_width / 8), height = int(screen_width / 4))
-left_frame.pack(side = "left", padx = 10, pady = 10)
-left_frame.pack_propagate(0)
+    author_label = ttk.Label(new_window, text="Autor:")
+    author_label.pack()
+    author_entry = ttk.Entry(new_window)
+    author_entry.pack()
 
-right_frame = tk.Frame(root, width = int(screen_width / 4), height = left_frame["height"], borderwidth = 4, relief = "ridge")
-right_frame.pack(side = "right", padx = 10, pady = 10)
-right_frame.pack_propagate(0)
+    price_label = ttk.Label(new_window, text="Cena:")
+    price_label.pack()
+    price_entry = ttk.Entry(new_window)
+    price_entry.pack()
 
-label = tk.Label(right_frame, text = "Podaj imie i nazwisko")
-label.pack()
+    category_label = ttk.Label(new_window, text="Kategoria:")
+    category_label.pack()
+    category_entry = ttk.Entry(new_window)
+    category_entry.pack()
 
-entry = tk.Entry(left_frame)
-entry.pack(anchor="w",padx=10,pady=10)
+    def add_new():
+        title = title_entry.get()
+        author = author_entry.get()
+        price = price_entry.get()
+        category = category_entry.get()
+        try:
+            conn = connect()
 
-button = tk.Button(left_frame, text = "Ok", command = change_text)
-button.pack(anchor="w",padx = 20)
+            cursor = conn.cursor()
+            sql = "INSERT INTO books (title, author, price, category) VALUES (%s,%s,%s,%s);"
 
-root.resizable(width = False, height = False)
+            params = (title, author, price, category)
+            cursor.execute(sql, params)
+            conn.commit()
+        except Exception as e:
+            print(e)
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
-radio_var = tk.StringVar(value = "")
+        load_data()
 
-radio_button1 = tk.Radiobutton(left_frame, text = "tester", variable = radio_var, value = "testerem")
-radio_button1.pack(anchor = "w", padx = 10, pady = 10)
+        new_window.destroy()
 
-radio_button2 = tk.Radiobutton(left_frame, text = "programista", variable = radio_var, value = "programista")
-radio_button2.pack(anchor = "w", padx = 10, pady = 10)
+    add_button = ttk.Button(new_window, text="Dodaj", command=add_new)
+    add_button.pack()
 
-checkbox_vars = []
-checkboxes = []
 
-checkbox_vars.append(tk.IntVar())
-checkbox = tk.Checkbutton(left_frame, text = "java", variable = checkbox_vars[0])
-checkbox.pack(anchor = "w", padx = 10, pady = 10)
-checkboxes.append(checkbox)
-checkbox_vars.append(tk.IntVar())
-checkbox2 = tk.Checkbutton(left_frame, text = "python", variable = checkbox_vars[1])
-checkbox2.pack(anchor = "w", padx = 10, pady = 10)
-checkboxes.append(checkbox2)
+def open_delete_book_window():
+    new_window = tk.Toplevel(root)
+    new_window.title("Usuń książkę")
 
-slider = tk.Scale(left_frame, from_ = 0, to = 25, orient = tk.HORIZONTAL)
-slider.pack(anchor = "w", padx = 10, pady = 10)
+    id_label = ttk.Label(new_window, text="ID:")
+    id_label.pack()
+    id_entry = ttk.Entry(new_window)
+    id_entry.pack()
 
-values = [
-"dolnośląskie",
- "kujawsko-pomorskie",
- "lubelskie",
- "lubuskie",
- "łódzkie",
- "małopolskie",
- "mazowieckie",
- "opolskie",
- "podkarpackie",
- "podlaskie",
- "pomorskie",
- "śląskie",
- "świętokrzyskie",
- "warmińsko-mazurskie",
- "wielkopolskie",
- "zachodniopomorskie"
+    def delete():
+        _id = id_entry.get()
 
-]
+        conn = connect()
 
-combobox = ttk.Combobox(left_frame, values = values)
-combobox.state(["readonly"])
-combobox.pack(anchor = "w", padx = 10, pady = 10)
+        cursor = conn.cursor()
+        sql = "delete from books where id = %s;"
 
+        cursor.execute(sql, tuple(_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        load_data()
+
+        new_window.destroy()
+
+    add_button = ttk.Button(new_window, text="Usuń", command=delete)
+    add_button.pack()
+
+
+def open_update_book_window():
+    new_window = tk.Toplevel(root)
+    new_window.title("Usuń książkę")
+
+    id_label = ttk.Label(new_window, text="ID:")
+    id_label.pack()
+    id_entry = ttk.Entry(new_window)
+    id_entry.pack()
+
+    title_label = ttk.Label(new_window, text="Tytuł:")
+    title_label.pack()
+    title_entry = ttk.Entry(new_window)
+    title_entry.pack()
+
+    author_label = ttk.Label(new_window, text="Autor:")
+    author_label.pack()
+    author_entry = ttk.Entry(new_window)
+    author_entry.pack()
+
+    price_label = ttk.Label(new_window, text="Cena:")
+    price_label.pack()
+    price_entry = ttk.Entry(new_window)
+    price_entry.pack()
+
+    category_label = ttk.Label(new_window, text="Kategoria:")
+    category_label.pack()
+    category_entry = ttk.Entry(new_window)
+    category_entry.pack()
+
+    def update():
+        _id = id_entry.get()
+        title = title_entry.get()
+        author = author_entry.get()
+        price = price_entry.get()
+        category = category_entry.get()
+
+        conn = connect()
+
+        cursor = conn.cursor()
+        sql = "update books set title = %s, author = %s, price = %s, category = %s where id = %s;"
+
+        cursor.execute(sql, (title, author, price, category, _id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        load_data()
+
+        new_window.destroy()
+
+    add_button = ttk.Button(new_window, text="Zmień", command=update)
+    add_button.pack()
+
+
+add_new_book = tk.Button(root, text="Dodaj książkę", command=open_new_book_window)
+delete_button = tk.Button(root, text="Usuń książkę", command=open_delete_book_window)
+delete_button.config(background='red', font=("Helvetica", 9, 'bold'))
+update_button = tk.Button(root, text="Zmień książkę", command=open_update_book_window)
+
+treeview.pack(side='top')
+add_new_book.pack(side='left', padx=5, pady=5)
+delete_button.pack(side='left', padx=5, pady=5)
+update_button.pack(side='left', padx=5, pady=5)
+
+treeview.bind("<Double-1>", open_details_window)
+
+load_data()
 
 root.mainloop()
-
-
