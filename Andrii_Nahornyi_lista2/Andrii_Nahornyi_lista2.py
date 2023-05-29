@@ -7,12 +7,12 @@ from sklearn.model_selection import cross_val_score, LeaveOneOut
 from sklearn.svm import SVC
 
 class Wine:
-    def __init__(self, variables, target,):
+    def __init__(self, variables, target):
         self.target = target
         self.variables = variables
 
     def __repr__(self):
-        return f"Wine(variables = {self.variables}, target = {self.target},)"
+        return f"Wine(variables = {self.variables}, target = {self.target})"
 
     def get(self):
       return self.target
@@ -93,25 +93,12 @@ print(wynik5)
 #Następnie wczytaj dane z tabeli wybierając z bazy danych tylko wiersze z typem wina nr 3
 # i zapisz je do nowego data frame:
 wynik6 = "W następnej linijce podmień na nowy  data frame z winami tylko klasy trzeciej:"
+
 connection = sqlite3.connect('wines_Andrii_Nahornyi.db')
-
-connection.execute('''CREATE TABLE IF NOT EXISTS wines
-                (id INTEGER PRIMARY KEY,
-                wine_type INTEGER,
-                name TEXT,
-                year INTEGER)''')
-
-data = [
-    (6, 3, 'Wine A', 1999),
-    (7, 3, 'Wine B', 1943),
-    (8, 3, 'Wine C', 6543),
-    (9, 3, 'Wine D', 1573),
-    (10, 3, 'Wine E', 1422)
-]
-#connection.executemany('INSERT INTO wines VALUES (?, ?, ?, ?)', data)
-connection.commit()
-query = "SELECT * FROM wines WHERE wine_type = 3"
+df.to_sql('wines', connection, if_exists = 'replace', index = False)
+query = "SELECT * FROM wines WHERE TypeOf = 3"
 wynik6 = pd.read_sql_query(query, connection)
+
 connection.close()
 
 print(wynik6.shape)
@@ -121,7 +108,6 @@ print(wynik6.shape)
 #Utwórz model regresji Logistycznej z domyślnymi ustawieniami:
 
 model = LogisticRegression()
-
 
 wynik7 = model.__class__.__name__
 print(wynik7)
