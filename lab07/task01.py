@@ -1,10 +1,22 @@
+import sqlite3
 import tkinter as tk
 from tkinter import ttk
-import mysql.connector
 
 root = tk.Tk()
 root.title("Book Store")
 root.iconbitmap("./bookshelf.ico")
+
+
+#Pobranie danych z tabeli
+def fetch_data():
+    connection = sqlite3.connect('database.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM Student")
+    result = cursor.fetchall()
+    cursor.close()  # Zamknięcie kursora
+    cursor.close()  # Zamknięcie połączenia
+    return result
+
 
 treeview = ttk.Treeview(root)
 treeview["columns"] = ("id", "mail", "imie", "nazwisko",
@@ -54,12 +66,13 @@ treeview.heading("hw10", text = "Zad 10")
 treeview.heading("grade", text = "Ocena końcowa")
 treeview.heading("status", text = "Status")
 
-def connect():
-    return mysql.connector.connect(
-        host = "db4free.net",
-        user = "s24918",
-        password = "s24918password",
-        database = "s24918database")
+def load_data():
+    data = fetch_data()
+    treeview.delete(*treeview.get_children())
+    for row in data:
+        treeview.insert("", "end", values = (row[0], row[1], row[2], row[3], row[4], row[5], row[6],
+                                            row[7], row[8], row[9], row[10], row[11], row[12], row[13],
+                                            row[14], row[15], row[16], row[17], row[18], row[19]))
 
 def open_details_window(event):
     selected_item = treeview.focus()
@@ -68,25 +81,6 @@ def open_details_window(event):
         values = item_data['values']
         print(values)
 
-
-def fetch_data() -> list[tuple]:
-    connection = connect()
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM Students;")
-    result = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return result
-
-def load_data():
-    data = fetch_data()
-
-    treeview.delete(*treeview.get_children())
-
-    for row in data:
-        treeview.insert("", "end", values = (row[0], row[1], row[2], row[3], row[4], row[5], row[6],
-                                            row[7], row[8], row[9], row[10], row[11], row[12], row[13],
-                                            row[14], row[15], row[16], row[17], row[18], row[19]))
 
 def AddStudent():
     window = tk.Toplevel(root)
@@ -216,7 +210,7 @@ def AddStudent():
         new_status = status_entry.get()
 
         try:
-            conenction = connect()
+            conenction = sqlite3.connect('database.db')
             cursor = conenction.cursor()
             sql = "INSERT INTO Students (id, mail, imie, nazwisko, project, lista1, lista2, lista3," \
                   " hw1, hw2, hw3, hw4, hw5, hw6, hw7, hw8, hw9, hw10, grade, status)" \
@@ -226,7 +220,7 @@ def AddStudent():
                       new_hw1, new_hw2, new_hw3, new_hw4, new_hw5, new_hw6, new_hw7, new_hw8, new_hw9, new_hw10, new_final_grade, new_status)
             cursor.execute(sql, params)
             conenction.commit()
-        except Exception as e:
+        except sqlite3.Error as e:
             print(e)
         finally:
             if cursor:
@@ -254,12 +248,12 @@ def deleteStudent():
         global cursor, connection
         _id = id_entry.get()
         try:
-            connection = connect()
+            connection = sqlite3.connect('database.db')
             cursor = connection.cursor()
             sql = "DELETE FROM Students where id = %s;"
             cursor.execute(sql, tuple(_id))
             connection.commit()
-        except Exception as e:
+        except sqlite3.Error as e:
             print(e)
         finally:
             if cursor:
@@ -267,9 +261,7 @@ def deleteStudent():
             if connection:
                 connection.close()
 
-            # Zamknięcie połączenia
             load_data()
-            # Zamknięcie okna po zapisaniu zmian
             window.destroy()
 
     add_button = ttk.Button(window, text = "Usuń", command = delete)
@@ -404,7 +396,7 @@ def updateStudent():
         new_status = status_entry.get()
 
         try:
-            connection = connect()
+            connection = sqlite3.connect('database.db')
 
             cursor = connection.cursor()
             sql = "UPDATE Students SET mail = %s, imie = %s, nazwisko = %s, project = %s, lista1 = %s, lista2 = %s, lista3 = %s," \
@@ -415,7 +407,7 @@ def updateStudent():
                       new_hw1, new_hw2, new_hw3, new_hw4, new_hw5, new_hw6, new_hw7, new_hw8, new_hw9, new_hw10,
                       new_final_grade, new_status, newId)
             cursor.execute(sql, params)
-        except Exception as e:
+        except sqlite3.Error as e:
             print(e)
         finally:
             if cursor:
@@ -448,3 +440,31 @@ updateButton.pack(side = "left", padx = 5, pady = 5)
 treeview.bind("<Double-1>", open_details_window)
 load_data()
 root.mainloop()
+
+if __name__ == "__main__":
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+                CREATE TABLE IF NOT EXISTS Student 
+                (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mail TEXT,
+                imie TEXT,
+                nazwisko TEXT,
+                project REAL,
+                lista1 REAL,
+                lista2 REAL,
+                lista3 REAL,
+                hw1 REAL,
+                hw2 REAL,
+                hw3 REAL,
+                hw4 REAL,
+                hw5 REAL,
+                hw6 REAL,
+                hw7 REAL,
+                hw8 REAL,
+                hw9 REAL,
+                hw10 REAL,
+                grade REAL,
+                status TEXT)''')
+    conn.commit()
+    conn.close()
