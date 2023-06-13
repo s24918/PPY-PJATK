@@ -35,7 +35,7 @@ df = pd.read_csv(url, names = headers) # tutaj podmień df. Ma zawierać wczytan
 
 
 #Zadanie1 przypisz nazwy kolumn z df w jednej linii:   (2pkt)
-wynik1 = df.columns.values
+wynik1 = df.columns.tolist()
 print(wynik1)
 
 
