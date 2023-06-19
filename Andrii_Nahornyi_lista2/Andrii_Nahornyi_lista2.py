@@ -25,11 +25,18 @@ ssl._create_default_https_context = ssl._create_unverified_context
 #Uwaga! Zobacz która zmienna jest zmienną objaśnianą, będzie to potrzebne do dalszych zadań.
 
 
-url = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data"
-headers = ["TypeOf", "Alcohol", "Malic_acid", "Ash",
-           "Alcalinity_of_ash", "Magnesium", "Total_phenols",
-           "Flavanoids", "Nonflavanoid_phenols", "Proanthocyanins",
-           "Color_intensity", "Hue", "OD280_OD315_of_diluted_wines", "Proline"]
+url = ""
+headers = []
+
+file1 = open('pliktextowy.txt', 'r')
+lines = file1.readlines()
+counter = 0
+for line in lines:
+    if counter == 0:
+        url = line.rstrip()
+    else:
+        headers.append(line.rstrip())
+    counter += 1
 
 df = pd.read_csv(url, names = headers) # tutaj podmień df. Ma zawierać wczytane dane.
 
