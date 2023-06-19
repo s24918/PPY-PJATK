@@ -35,12 +35,12 @@ df = pd.read_csv(url, names = headers) # tutaj podmień df. Ma zawierać wczytan
 
 
 #Zadanie1 przypisz nazwy kolumn z df w jednej linii:   (2pkt)
-wynik1 = df.columns.tolist()
+wynik1 = df.columns.values.tolist()
 print(wynik1)
 
 
 #Zadanie 2: Wypisz liczbę wierszy oraz kolumn ramki danych w jednej linii.  (2pkt)
-wynik2 = f"Liczba wierszy: {df.shape[0]}, Liczba kolumn: {df.shape[1]}"
+wynik2 = df.shape
 print(wynik2)
 
 
