@@ -3,18 +3,18 @@ import tkinter as tk
 from tkinter import ttk
 
 root = tk.Tk()
-root.title("Book Store")
+root.title("Students")
 root.iconbitmap("./bookshelf.ico")
 
 
 #Pobranie danych z tabeli
 def fetch_data():
-    connection = sqlite3.connect('database.db')
-    cursor = connection.cursor()
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM Student")
     result = cursor.fetchall()
     cursor.close()  # Zamknięcie kursora
-    cursor.close()  # Zamknięcie połączenia
+    conn.close()  # Zamknięcie połączenia
     return result
 
 
@@ -187,7 +187,7 @@ def AddStudent():
     status_entry.grid(row = 19, column = 1)
 
     def add_new():
-        global cursor, conenction
+        global cursor, connection
         newId = idEntry.get()
         new_mail = mail_entry.get()
         new_name = name_entry.get()
@@ -210,8 +210,8 @@ def AddStudent():
         new_status = status_entry.get()
 
         try:
-            conenction = sqlite3.connect('database.db')
-            cursor = conenction.cursor()
+            connection = sqlite3.connect('database.db')
+            cursor = connection.cursor()
             sql = "INSERT INTO Students (id, mail, imie, nazwisko, project, lista1, lista2, lista3," \
                   " hw1, hw2, hw3, hw4, hw5, hw6, hw7, hw8, hw9, hw10, grade, status)" \
                   " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
@@ -219,14 +219,14 @@ def AddStudent():
             params = (newId, new_mail, new_name, new_surname, new_project, new_list1, new_list2, new_list3,
                       new_hw1, new_hw2, new_hw3, new_hw4, new_hw5, new_hw6, new_hw7, new_hw8, new_hw9, new_hw10, new_final_grade, new_status)
             cursor.execute(sql, params)
-            conenction.commit()
+            connection.commit()
         except sqlite3.Error as e:
             print(e)
         finally:
             if cursor:
                 cursor.close()
-            if conenction:
-                conenction.close()
+            if connection:
+                connection.close()
 
         load_data()
         window.destroy()
